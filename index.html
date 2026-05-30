@@ -1,11 +1,1468 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Repaso Spring Boot – 20 Ejercicios</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        java: {
+                            50:  '#f0f9f7',
+                            100: '#d5f4e6',
+                            500: '#27ae60',
+                            600: '#229954',
+                            700: '#1e8449',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* ── Acordeón ── */
+        details[open] {
+            border-color: #229954 !important;
+            box-shadow: 0 4px 12px rgba(34,153,84,.15);
+        }
+        details[open] > summary {
+            background-color: #f0f9f7 !important;
+            color: #229954 !important;
+            font-weight: 600;
+            border-bottom: 2px solid #229954;
+        }
+        details[open] > summary:hover { background-color: #d5f4e6 !important; }
+
+        /* ── Pseudocódigo ── */
+        .pseudo-section {
+            background: #f0f9f7;
+            border-left: 4px solid #229954;
+            padding: 12px 14px;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+        .pseudo-section ol { margin: 6px 0; padding-left: 20px; }
+        .pseudo-section li { margin: 3px 0; font-size: 13px; color: #2c3e50; line-height: 1.5; }
+        .logic-code {
+            background: #fff;
+            border: 1px solid #d5f4e6;
+            padding: 8px 10px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #374151;
+            margin-top: 6px;
+            white-space: pre-wrap;
+        }
+
+        /* ── Timer global ── */
+        .countdown-container {
+            background: linear-gradient(135deg,#f0f9f7 0%,#d5f4e6 100%);
+            border: 3px solid #229954;
+            border-radius: 12px;
+            padding: 28px;
+            text-align: center;
+            box-shadow: 0 8px 24px rgba(34,153,84,.2);
+            margin-bottom: 24px;
+        }
+        .timer-display {
+            font-size: 5rem;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            letter-spacing: .1em;
+            transition: color .3s;
+        }
+
+        /* ── Timer mini dentro del ejercicio ── */
+        .timer-mini {
+            font-size: 1.6rem;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            letter-spacing: .06em;
+            background: #f0f9f7;
+            border-left: 4px solid #229954;
+            border-radius: 4px;
+            padding: 6px 14px;
+            display: inline-block;
+            transition: color .3s;
+        }
+        .timer-red  { color: #dc2626 !important; }
+        .timer-green { color: #229954; }
+
+        /* ── Chips de método HTTP ── */
+        .badge-get    { background:#6b7280; }
+        .badge-post   { background:#229954; }
+        .badge-put    { background:#2563eb; }
+        .badge-delete { background:#dc2626; }
+
+        /* animación suave de apertura */
+        details > div { animation: fadeIn .15s ease; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
+
+        /* progreso */
+        #progress-bar { transition: width .4s ease; }
+    </style>
 </head>
-<body>
-    <h1>Hello World</h1>
+<body class="bg-gray-50 min-h-screen">
+<div class="max-w-4xl mx-auto px-4 py-10">
+
+    <!-- ── Header ── -->
+    <div class="text-center mb-8">
+        <div class="flex items-center justify-center gap-3 mb-2">
+            <svg class="w-8 h-8 text-java-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+            </svg>
+            <h1 class="text-3xl font-bold text-gray-900">Spring Boot – 20 Ejercicios</h1>
+        </div>
+        <p class="text-gray-500 text-sm">Controller · Service · DTO · Métodos HTTP</p>
+    </div>
+
+    <!-- ── Progreso ── -->
+    <div class="mb-6">
+        <div class="flex justify-between text-xs text-gray-500 mb-1">
+            <span>Progreso de repaso</span>
+            <span id="progress-label">0 / 20 completados</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2">
+            <div id="progress-bar" class="bg-java-600 h-2 rounded-full" style="width:0%"></div>
+        </div>
+    </div>
+
+    <!-- ── Timer global ── -->
+    <div class="countdown-container">
+        <p class="text-java-600 font-semibold mb-2 text-base flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 6v6l4 2"/></svg>
+            Cuenta atrás por ejercicio
+        </p>
+        <div id="timer-global" class="timer-display timer-green">03:00</div>
+        <p id="timer-status" class="text-xs text-gray-500 mt-1 h-4"></p>
+        <div class="mt-4 flex gap-2 justify-center flex-wrap">
+            <button id="btn-start"  onclick="startTimer()"  class="px-5 py-2 bg-java-600 text-white text-sm font-semibold rounded-lg hover:bg-java-700 transition flex items-center gap-2">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M6.3 2.841A1.5 1.5 0 004 4.11v11.78a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/></svg>
+                Iniciar
+            </button>
+            <button id="btn-pause"  onclick="pauseTimer()"  class="px-5 py-2 bg-yellow-500 text-white text-sm font-semibold rounded-lg hover:bg-yellow-600 transition hidden flex items-center gap-2">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M5.75 3a.75.75 0 00-.75.75v12.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75V3.75A.75.75 0 007.25 3h-1.5zM12.75 3a.75.75 0 00-.75.75v12.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75V3.75A.75.75 0 0014.25 3h-1.5z"/></svg>
+                Pausar
+            </button>
+            <button id="btn-resume" onclick="resumeTimer()" class="px-5 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition hidden flex items-center gap-2">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M6.3 2.841A1.5 1.5 0 004 4.11v11.78a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/></svg>
+                Reanudar
+            </button>
+            <div class="flex items-center gap-1 ml-2">
+                <label class="text-xs text-gray-600">min:</label>
+                <select id="timer-minutes" class="border border-gray-300 rounded px-2 py-1 text-sm bg-white" onchange="updateTimerPreset()">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3" selected>3</option>
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Lista de ejercicios ── -->
+    <div class="space-y-2" id="exercise-list">
+
+        <!-- EJ 1 -->
+        <details class="border border-gray-200 rounded-lg overflow-hidden" data-id="1">
+            <summary class="px-4 py-3 bg-gray-50 cursor-pointer hover:bg-gray-100 flex items-center gap-2 font-medium text-gray-800 select-none">
+                <span class="flex w-6 h-6 items-center justify-center rounded-full bg-java-600 text-white text-xs font-bold flex-shrink-0">1</span>
+                <span class="flex-1">Mensaje de estudiante</span>
+                <span class="check-icon text-java-600 hidden">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                </span>
+            </summary>
+            <div class="px-4 py-4 space-y-3 bg-white">
+                <div class="flex items-center justify-between">
+                    <span class="timer-mini timer-green" data-timer>03:00</span>
+                    <button onclick="markDone(this)" class="px-3 py-1 text-xs rounded font-medium border border-java-600 text-java-600 hover:bg-java-50 transition done-btn flex items-center gap-1">
+                        Marcar como hecho
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                    </button>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">MÉTODO & ENDPOINT</p>
+                    <p class="text-sm"><span class="badge-post inline-block px-2 py-0.5 text-white text-xs rounded font-bold mr-1">POST</span><code class="text-gray-600">/estudiantes/mensaje</code></p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">ENUNCIADO</p>
+                    <p class="text-sm text-gray-700">Recibir por JSON el nombre, edad y curso de un estudiante. Devolver un mensaje personalizado.</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">JSON ENVIADO</p>
+                    <pre class="bg-gray-100 p-2 rounded text-xs font-mono text-gray-800 overflow-x-auto">{ "nombre": "Carlos", "edad": 20, "curso": "Spring Boot" }</pre>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">RESPUESTA ESPERADA</p>
+                    <pre class="bg-java-50 p-2 rounded text-xs font-mono text-gray-800">El estudiante Carlos tiene 20 años y está inscrito en el curso Spring Boot</pre>
+                </div>
+                <div class="flex flex-wrap gap-1 items-center justify-between">
+                    <div class="flex flex-wrap gap-1">
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">@RequestBody</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">DTO</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">String</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">Concatenación</span>
+                    </div>
+                    <button onclick="togglePseudo(this)" class="px-3 py-1 bg-gray-600 text-white text-xs rounded font-medium hover:bg-gray-700 transition">Pseudocódigo</button>
+                </div>
+                <div class="pseudo-section hidden">
+                    <p class="text-xs font-semibold text-java-600 mb-2">PSEUDOCÓDIGO</p>
+                    <ol class="text-xs text-gray-700">
+                        <li>Recibir JSON con nombre, edad y curso → guardar en DTO.</li>
+                        <li>Construir el mensaje concatenando los tres campos.</li>
+                        <li>Retornar el String resultante.</li>
+                    </ol>
+                    <div class="logic-code">mensaje = "El estudiante " + dto.nombre + " tiene " + dto.edad + " años y está inscrito en el curso " + dto.curso
+return mensaje</div>
+                </div>
+            </div>
+        </details>
+
+        <!-- EJ 2 -->
+        <details class="border border-gray-200 rounded-lg overflow-hidden" data-id="2">
+            <summary class="px-4 py-3 bg-gray-50 cursor-pointer hover:bg-gray-100 flex items-center gap-2 font-medium text-gray-800 select-none">
+                <span class="flex w-6 h-6 items-center justify-center rounded-full bg-java-600 text-white text-xs font-bold flex-shrink-0">2</span>
+                <span class="flex-1">Mayoría de edad con if/else</span>
+                <span class="check-icon text-java-600 hidden">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                </span>
+            </summary>
+            <div class="px-4 py-4 space-y-3 bg-white">
+                <div class="flex items-center justify-between">
+                    <span class="timer-mini timer-green" data-timer>03:00</span>
+                    <button onclick="markDone(this)" class="px-3 py-1 text-xs rounded font-medium border border-java-600 text-java-600 hover:bg-java-50 transition done-btn flex items-center gap-1">
+                        Marcar como hecho
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                    </button>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">MÉTODO & ENDPOINT</p>
+                    <p class="text-sm"><span class="badge-post inline-block px-2 py-0.5 text-white text-xs rounded font-bold mr-1">POST</span><code class="text-gray-600">/personas/mayor-edad</code></p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">ENUNCIADO</p>
+                    <p class="text-sm text-gray-700">Recibir por JSON el nombre y edad de una persona. Si la edad es ≥ 18, devolver que es mayor de edad; si no, que es menor.</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">JSON ENVIADO</p>
+                    <pre class="bg-gray-100 p-2 rounded text-xs font-mono text-gray-800">{ "nombre": "Pedro", "edad": 17 }</pre>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">RESPUESTA ESPERADA</p>
+                    <pre class="bg-java-50 p-2 rounded text-xs font-mono text-gray-800">Pedro es menor de edad</pre>
+                </div>
+                <div class="flex flex-wrap gap-1 items-center justify-between">
+                    <div class="flex flex-wrap gap-1">
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">@RequestBody</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">DTO</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">if/else</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">String</span>
+                    </div>
+                    <button onclick="togglePseudo(this)" class="px-3 py-1 bg-gray-600 text-white text-xs rounded font-medium hover:bg-gray-700 transition">Pseudocódigo</button>
+                </div>
+                <div class="pseudo-section hidden">
+                    <p class="text-xs font-semibold text-java-600 mb-2">PSEUDOCÓDIGO</p>
+                    <ol class="text-xs text-gray-700">
+                        <li>Recibir JSON con nombre y edad → guardar en DTO.</li>
+                        <li>Evaluar si edad ≥ 18.</li>
+                        <li>Construir y retornar el mensaje correspondiente.</li>
+                    </ol>
+                    <div class="logic-code">if (dto.edad >= 18)
+    return dto.nombre + " es mayor de edad"
+else
+    return dto.nombre + " es menor de edad"</div>
+                </div>
+            </div>
+        </details>
+
+        <!-- EJ 3 -->
+        <details class="border border-gray-200 rounded-lg overflow-hidden" data-id="3">
+            <summary class="px-4 py-3 bg-gray-50 cursor-pointer hover:bg-gray-100 flex items-center gap-2 font-medium text-gray-800 select-none">
+                <span class="flex w-6 h-6 items-center justify-center rounded-full bg-java-600 text-white text-xs font-bold flex-shrink-0">3</span>
+                <span class="flex-1">Calcular total de compra</span>
+                <span class="check-icon text-java-600 hidden">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                </span>
+            </summary>
+            <div class="px-4 py-4 space-y-3 bg-white">
+                <div class="flex items-center justify-between">
+                    <span class="timer-mini timer-green" data-timer>03:00</span>
+                    <button onclick="markDone(this)" class="px-3 py-1 text-xs rounded font-medium border border-java-600 text-java-600 hover:bg-java-50 transition done-btn flex items-center gap-1">
+                        Marcar como hecho
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                    </button>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">MÉTODO & ENDPOINT</p>
+                    <p class="text-sm"><span class="badge-post inline-block px-2 py-0.5 text-white text-xs rounded font-bold mr-1">POST</span><code class="text-gray-600">/compras/total</code></p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">ENUNCIADO</p>
+                    <p class="text-sm text-gray-700">Recibir por JSON el nombre del producto, precio unitario y cantidad. Devolver el total de la compra.</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">JSON ENVIADO</p>
+                    <pre class="bg-gray-100 p-2 rounded text-xs font-mono text-gray-800">{ "producto": "Mouse", "precio": 12000, "cantidad": 3 }</pre>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">RESPUESTA ESPERADA</p>
+                    <pre class="bg-java-50 p-2 rounded text-xs font-mono text-gray-800">El total por 3 Mouse es 36000</pre>
+                </div>
+                <div class="flex flex-wrap gap-1 items-center justify-between">
+                    <div class="flex flex-wrap gap-1">
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">@RequestBody</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">DTO</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">Multiplicación</span>
+                    </div>
+                    <button onclick="togglePseudo(this)" class="px-3 py-1 bg-gray-600 text-white text-xs rounded font-medium hover:bg-gray-700 transition">Pseudocódigo</button>
+                </div>
+                <div class="pseudo-section hidden">
+                    <p class="text-xs font-semibold text-java-600 mb-2">PSEUDOCÓDIGO</p>
+                    <ol class="text-xs text-gray-700">
+                        <li>Recibir JSON con producto, precio y cantidad → DTO.</li>
+                        <li>Calcular total = precio × cantidad.</li>
+                        <li>Construir y retornar el mensaje.</li>
+                    </ol>
+                    <div class="logic-code">total = dto.precio * dto.cantidad
+return "El total por " + dto.cantidad + " " + dto.producto + " es " + total</div>
+                </div>
+            </div>
+        </details>
+
+        <!-- EJ 4 -->
+        <details class="border border-gray-200 rounded-lg overflow-hidden" data-id="4">
+            <summary class="px-4 py-3 bg-gray-50 cursor-pointer hover:bg-gray-100 flex items-center gap-2 font-medium text-gray-800 select-none">
+                <span class="flex w-6 h-6 items-center justify-center rounded-full bg-java-600 text-white text-xs font-bold flex-shrink-0">4</span>
+                <span class="flex-1">Promedio y resultado con if/else</span>
+                <span class="check-icon text-java-600 hidden">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                </span>
+            </summary>
+            <div class="px-4 py-4 space-y-3 bg-white">
+                <div class="flex items-center justify-between">
+                    <span class="timer-mini timer-green" data-timer>03:00</span>
+                    <button onclick="markDone(this)" class="px-3 py-1 text-xs rounded font-medium border border-java-600 text-java-600 hover:bg-java-50 transition done-btn flex items-center gap-1">
+                        Marcar como hecho
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                    </button>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">MÉTODO & ENDPOINT</p>
+                    <p class="text-sm"><span class="badge-post inline-block px-2 py-0.5 text-white text-xs rounded font-bold mr-1">POST</span><code class="text-gray-600">/notas/resultado</code></p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">ENUNCIADO</p>
+                    <p class="text-sm text-gray-700">Recibir por JSON el nombre del estudiante y tres notas. Calcular el promedio. Si es ≥ 4.0 devolver que aprueba; si no, que reprueba.</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">JSON ENVIADO</p>
+                    <pre class="bg-gray-100 p-2 rounded text-xs font-mono text-gray-800">{ "nombre": "María", "nota1": 5.5, "nota2": 6.0, "nota3": 4.5 }</pre>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">RESPUESTA ESPERADA</p>
+                    <pre class="bg-java-50 p-2 rounded text-xs font-mono text-gray-800">María aprueba con promedio 5.333333333333333</pre>
+                </div>
+                <div class="flex flex-wrap gap-1 items-center justify-between">
+                    <div class="flex flex-wrap gap-1">
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">@RequestBody</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">DTO</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">double</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">if/else</span>
+                    </div>
+                    <button onclick="togglePseudo(this)" class="px-3 py-1 bg-gray-600 text-white text-xs rounded font-medium hover:bg-gray-700 transition">Pseudocódigo</button>
+                </div>
+                <div class="pseudo-section hidden">
+                    <p class="text-xs font-semibold text-java-600 mb-2">PSEUDOCÓDIGO</p>
+                    <ol class="text-xs text-gray-700">
+                        <li>Recibir JSON con nombre, nota1, nota2, nota3 → DTO.</li>
+                        <li>Calcular promedio = (nota1 + nota2 + nota3) / 3.</li>
+                        <li>Si promedio ≥ 4.0 → "aprueba"; si no → "reprueba".</li>
+                        <li>Retornar mensaje con nombre y promedio.</li>
+                    </ol>
+                    <div class="logic-code">promedio = (dto.nota1 + dto.nota2 + dto.nota3) / 3
+if (promedio >= 4.0)
+    return dto.nombre + " aprueba con promedio " + promedio
+else
+    return dto.nombre + " reprueba con promedio " + promedio</div>
+                </div>
+            </div>
+        </details>
+
+        <!-- EJ 5 -->
+        <details class="border border-gray-200 rounded-lg overflow-hidden" data-id="5">
+            <summary class="px-4 py-3 bg-gray-50 cursor-pointer hover:bg-gray-100 flex items-center gap-2 font-medium text-gray-800 select-none">
+                <span class="flex w-6 h-6 items-center justify-center rounded-full bg-java-600 text-white text-xs font-bold flex-shrink-0">5</span>
+                <span class="flex-1">Aplicar descuento con if</span>
+                <span class="check-icon text-java-600 hidden">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                </span>
+            </summary>
+            <div class="px-4 py-4 space-y-3 bg-white">
+                <div class="flex items-center justify-between">
+                    <span class="timer-mini timer-green" data-timer>03:00</span>
+                    <button onclick="markDone(this)" class="px-3 py-1 text-xs rounded font-medium border border-java-600 text-java-600 hover:bg-java-50 transition done-btn flex items-center gap-1">
+                        Marcar como hecho
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                    </button>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">MÉTODO & ENDPOINT</p>
+                    <p class="text-sm"><span class="badge-post inline-block px-2 py-0.5 text-white text-xs rounded font-bold mr-1">POST</span><code class="text-gray-600">/productos/descuento</code></p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">ENUNCIADO</p>
+                    <p class="text-sm text-gray-700">Recibir por JSON nombre del producto, precio y categoría. Si la categoría es <code>tecnologia</code>, aplicar 10% de descuento; si no, mantener el precio original.</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">JSON ENVIADO</p>
+                    <pre class="bg-gray-100 p-2 rounded text-xs font-mono text-gray-800">{ "nombre": "Teclado", "precio": 50000, "categoria": "tecnologia" }</pre>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">RESPUESTA ESPERADA</p>
+                    <pre class="bg-java-50 p-2 rounded text-xs font-mono text-gray-800">El precio final de Teclado es 45000.0</pre>
+                </div>
+                <div class="flex flex-wrap gap-1 items-center justify-between">
+                    <div class="flex flex-wrap gap-1">
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">@RequestBody</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">DTO</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">if</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">Porcentaje</span>
+                    </div>
+                    <button onclick="togglePseudo(this)" class="px-3 py-1 bg-gray-600 text-white text-xs rounded font-medium hover:bg-gray-700 transition">Pseudocódigo</button>
+                </div>
+                <div class="pseudo-section hidden">
+                    <p class="text-xs font-semibold text-java-600 mb-2">PSEUDOCÓDIGO</p>
+                    <ol class="text-xs text-gray-700">
+                        <li>Recibir JSON → DTO.</li>
+                        <li>Si categoria.equals("tecnologia") → precio = precio * 0.9.</li>
+                        <li>Retornar "El precio final de " + nombre + " es " + precio.</li>
+                    </ol>
+                    <div class="logic-code">double precio = dto.precio
+if (dto.categoria.equals("tecnologia"))
+    precio = precio * 0.9
+return "El precio final de " + dto.nombre + " es " + precio</div>
+                </div>
+            </div>
+        </details>
+
+        <!-- EJ 6 -->
+        <details class="border border-gray-200 rounded-lg overflow-hidden" data-id="6">
+            <summary class="px-4 py-3 bg-gray-50 cursor-pointer hover:bg-gray-100 flex items-center gap-2 font-medium text-gray-800 select-none">
+                <span class="flex w-6 h-6 items-center justify-center rounded-full bg-java-600 text-white text-xs font-bold flex-shrink-0">6</span>
+                <span class="flex-1">Generar correo institucional</span>
+                <span class="check-icon text-java-600 hidden">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                </span>
+            </summary>
+            <div class="px-4 py-4 space-y-3 bg-white">
+                <div class="flex items-center justify-between">
+                    <span class="timer-mini timer-green" data-timer>03:00</span>
+                    <button onclick="markDone(this)" class="px-3 py-1 text-xs rounded font-medium border border-java-600 text-java-600 hover:bg-java-50 transition done-btn flex items-center gap-1">
+                        Marcar como hecho
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                    </button>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">MÉTODO & ENDPOINT</p>
+                    <p class="text-sm"><span class="badge-post inline-block px-2 py-0.5 text-white text-xs rounded font-bold mr-1">POST</span><code class="text-gray-600">/usuarios/correo</code></p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">ENUNCIADO</p>
+                    <p class="text-sm text-gray-700">Recibir por JSON nombre, apellido y dominio. Devolver correo con formato <code>nombre.apellido@dominio</code>.</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">JSON ENVIADO</p>
+                    <pre class="bg-gray-100 p-2 rounded text-xs font-mono text-gray-800">{ "nombre": "camila", "apellido": "rojas", "dominio": "empresa.cl" }</pre>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">RESPUESTA ESPERADA</p>
+                    <pre class="bg-java-50 p-2 rounded text-xs font-mono text-gray-800">camila.rojas@empresa.cl</pre>
+                </div>
+                <div class="flex flex-wrap gap-1 items-center justify-between">
+                    <div class="flex flex-wrap gap-1">
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">@RequestBody</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">DTO</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">String</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">Concatenación</span>
+                    </div>
+                    <button onclick="togglePseudo(this)" class="px-3 py-1 bg-gray-600 text-white text-xs rounded font-medium hover:bg-gray-700 transition">Pseudocódigo</button>
+                </div>
+                <div class="pseudo-section hidden">
+                    <p class="text-xs font-semibold text-java-600 mb-2">PSEUDOCÓDIGO</p>
+                    <ol class="text-xs text-gray-700">
+                        <li>Recibir JSON → DTO.</li>
+                        <li>Concatenar: nombre + "." + apellido + "@" + dominio.</li>
+                        <li>Retornar el correo.</li>
+                    </ol>
+                    <div class="logic-code">return dto.nombre + "." + dto.apellido + "@" + dto.dominio</div>
+                </div>
+            </div>
+        </details>
+
+        <!-- EJ 7 -->
+        <details class="border border-gray-200 rounded-lg overflow-hidden" data-id="7">
+            <summary class="px-4 py-3 bg-gray-50 cursor-pointer hover:bg-gray-100 flex items-center gap-2 font-medium text-gray-800 select-none">
+                <span class="flex w-6 h-6 items-center justify-center rounded-full bg-java-600 text-white text-xs font-bold flex-shrink-0">7</span>
+                <span class="flex-1">Calcular IMC con if/else</span>
+                <span class="check-icon text-java-600 hidden">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                </span>
+            </summary>
+            <div class="px-4 py-4 space-y-3 bg-white">
+                <div class="flex items-center justify-between">
+                    <span class="timer-mini timer-green" data-timer>03:00</span>
+                    <button onclick="markDone(this)" class="px-3 py-1 text-xs rounded font-medium border border-java-600 text-java-600 hover:bg-java-50 transition done-btn flex items-center gap-1">
+                        Marcar como hecho
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                    </button>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">MÉTODO & ENDPOINT</p>
+                    <p class="text-sm"><span class="badge-post inline-block px-2 py-0.5 text-white text-xs rounded font-bold mr-1">POST</span><code class="text-gray-600">/salud/imc</code></p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">ENUNCIADO</p>
+                    <p class="text-sm text-gray-700">Recibir por JSON nombre, peso y altura. Calcular IMC. Si IMC ≥ 25, está sobre el rango normal; si no, dentro del rango normal.</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">JSON ENVIADO</p>
+                    <pre class="bg-gray-100 p-2 rounded text-xs font-mono text-gray-800">{ "nombre": "Luis", "peso": 80, "altura": 1.75 }</pre>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">RESPUESTA ESPERADA</p>
+                    <pre class="bg-java-50 p-2 rounded text-xs font-mono text-gray-800">Luis tiene IMC 26.122448979591837 y está sobre el rango normal</pre>
+                </div>
+                <div class="flex flex-wrap gap-1 items-center justify-between">
+                    <div class="flex flex-wrap gap-1">
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">@RequestBody</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">DTO</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">double</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">if/else</span>
+                    </div>
+                    <button onclick="togglePseudo(this)" class="px-3 py-1 bg-gray-600 text-white text-xs rounded font-medium hover:bg-gray-700 transition">Pseudocódigo</button>
+                </div>
+                <div class="pseudo-section hidden">
+                    <p class="text-xs font-semibold text-java-600 mb-2">PSEUDOCÓDIGO</p>
+                    <ol class="text-xs text-gray-700">
+                        <li>Recibir JSON → DTO.</li>
+                        <li>imc = peso / (altura * altura).</li>
+                        <li>Si imc ≥ 25 → "sobre el rango normal"; si no → "dentro del rango normal".</li>
+                    </ol>
+                    <div class="logic-code">double imc = dto.peso / (dto.altura * dto.altura)
+String estado = (imc >= 25) ? "sobre el rango normal" : "dentro del rango normal"
+return dto.nombre + " tiene IMC " + imc + " y está " + estado</div>
+                </div>
+            </div>
+        </details>
+
+        <!-- EJ 8 -->
+        <details class="border border-gray-200 rounded-lg overflow-hidden" data-id="8">
+            <summary class="px-4 py-3 bg-gray-50 cursor-pointer hover:bg-gray-100 flex items-center gap-2 font-medium text-gray-800 select-none">
+                <span class="flex w-6 h-6 items-center justify-center rounded-full bg-java-600 text-white text-xs font-bold flex-shrink-0">8</span>
+                <span class="flex-1">Convertir minutos a segundos</span>
+                <span class="check-icon text-java-600 hidden">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                </span>
+            </summary>
+            <div class="px-4 py-4 space-y-3 bg-white">
+                <div class="flex items-center justify-between">
+                    <span class="timer-mini timer-green" data-timer>03:00</span>
+                    <button onclick="markDone(this)" class="px-3 py-1 text-xs rounded font-medium border border-java-600 text-java-600 hover:bg-java-50 transition done-btn flex items-center gap-1">
+                        Marcar como hecho
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                    </button>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">MÉTODO & ENDPOINT</p>
+                    <p class="text-sm"><span class="badge-post inline-block px-2 py-0.5 text-white text-xs rounded font-bold mr-1">POST</span><code class="text-gray-600">/tiempo/segundos</code></p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">ENUNCIADO</p>
+                    <p class="text-sm text-gray-700">Recibir por JSON una actividad y cantidad de minutos. Devolver cuántos segundos dura.</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">JSON ENVIADO</p>
+                    <pre class="bg-gray-100 p-2 rounded text-xs font-mono text-gray-800">{ "actividad": "Ejercicio", "minutos": 45 }</pre>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">RESPUESTA ESPERADA</p>
+                    <pre class="bg-java-50 p-2 rounded text-xs font-mono text-gray-800">La actividad Ejercicio dura 2700 segundos</pre>
+                </div>
+                <div class="flex flex-wrap gap-1 items-center justify-between">
+                    <div class="flex flex-wrap gap-1">
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">@RequestBody</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">DTO</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">int</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">Multiplicación</span>
+                    </div>
+                    <button onclick="togglePseudo(this)" class="px-3 py-1 bg-gray-600 text-white text-xs rounded font-medium hover:bg-gray-700 transition">Pseudocódigo</button>
+                </div>
+                <div class="pseudo-section hidden">
+                    <p class="text-xs font-semibold text-java-600 mb-2">PSEUDOCÓDIGO</p>
+                    <ol class="text-xs text-gray-700">
+                        <li>Recibir JSON → DTO.</li>
+                        <li>segundos = minutos * 60.</li>
+                        <li>Retornar "La actividad " + actividad + " dura " + segundos + " segundos".</li>
+                    </ol>
+                    <div class="logic-code">int segundos = dto.minutos * 60
+return "La actividad " + dto.actividad + " dura " + segundos + " segundos"</div>
+                </div>
+            </div>
+        </details>
+
+        <!-- EJ 9 -->
+        <details class="border border-gray-200 rounded-lg overflow-hidden" data-id="9">
+            <summary class="px-4 py-3 bg-gray-50 cursor-pointer hover:bg-gray-100 flex items-center gap-2 font-medium text-gray-800 select-none">
+                <span class="flex w-6 h-6 items-center justify-center rounded-full bg-java-600 text-white text-xs font-bold flex-shrink-0">9</span>
+                <span class="flex-1">Total de compra con cantidad en URL</span>
+                <span class="check-icon text-java-600 hidden">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                </span>
+            </summary>
+            <div class="px-4 py-4 space-y-3 bg-white">
+                <div class="flex items-center justify-between">
+                    <span class="timer-mini timer-green" data-timer>03:00</span>
+                    <button onclick="markDone(this)" class="px-3 py-1 text-xs rounded font-medium border border-java-600 text-java-600 hover:bg-java-50 transition done-btn flex items-center gap-1">
+                        Marcar como hecho
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                    </button>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">MÉTODO & ENDPOINT</p>
+                    <p class="text-sm"><span class="badge-post inline-block px-2 py-0.5 text-white text-xs rounded font-bold mr-1">POST</span><code class="text-gray-600">/compras/total/{cantidad}</code></p>
+                </div>
+                <div class="bg-java-50 px-3 py-2 rounded text-xs font-mono text-gray-700">POST /compras/total/4</div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">ENUNCIADO</p>
+                    <p class="text-sm text-gray-700">Recibir la cantidad por la URL y el producto con su precio por JSON. Multiplicar para obtener el total.</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">JSON ENVIADO</p>
+                    <pre class="bg-gray-100 p-2 rounded text-xs font-mono text-gray-800">{ "producto": "Audífonos", "precio": 15000 }</pre>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">RESPUESTA ESPERADA</p>
+                    <pre class="bg-java-50 p-2 rounded text-xs font-mono text-gray-800">El total por 4 Audífonos es 60000</pre>
+                </div>
+                <div class="flex flex-wrap gap-1 items-center justify-between">
+                    <div class="flex flex-wrap gap-1">
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">@PathVariable</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">@RequestBody</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">DTO</span>
+                    </div>
+                    <button onclick="togglePseudo(this)" class="px-3 py-1 bg-gray-600 text-white text-xs rounded font-medium hover:bg-gray-700 transition">Pseudocódigo</button>
+                </div>
+                <div class="pseudo-section hidden">
+                    <p class="text-xs font-semibold text-java-600 mb-2">PSEUDOCÓDIGO</p>
+                    <ol class="text-xs text-gray-700">
+                        <li>Recibir cantidad por @PathVariable.</li>
+                        <li>Recibir producto y precio por @RequestBody → DTO.</li>
+                        <li>total = cantidad * precio.</li>
+                        <li>Retornar mensaje con los tres valores.</li>
+                    </ol>
+                    <div class="logic-code">int total = cantidad * dto.precio
+return "El total por " + cantidad + " " + dto.producto + " es " + total</div>
+                </div>
+            </div>
+        </details>
+
+        <!-- EJ 10 -->
+        <details class="border border-gray-200 rounded-lg overflow-hidden" data-id="10">
+            <summary class="px-4 py-3 bg-gray-50 cursor-pointer hover:bg-gray-100 flex items-center gap-2 font-medium text-gray-800 select-none">
+                <span class="flex w-6 h-6 items-center justify-center rounded-full bg-java-600 text-white text-xs font-bold flex-shrink-0">10</span>
+                <span class="flex-1">Calcular sueldo por días trabajados</span>
+                <span class="check-icon text-java-600 hidden">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                </span>
+            </summary>
+            <div class="px-4 py-4 space-y-3 bg-white">
+                <div class="flex items-center justify-between">
+                    <span class="timer-mini timer-green" data-timer>03:00</span>
+                    <button onclick="markDone(this)" class="px-3 py-1 text-xs rounded font-medium border border-java-600 text-java-600 hover:bg-java-50 transition done-btn flex items-center gap-1">
+                        Marcar como hecho
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                    </button>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">MÉTODO & ENDPOINT</p>
+                    <p class="text-sm"><span class="badge-post inline-block px-2 py-0.5 text-white text-xs rounded font-bold mr-1">POST</span><code class="text-gray-600">/sueldos/calcular/{dias}</code></p>
+                </div>
+                <div class="bg-java-50 px-3 py-2 rounded text-xs font-mono text-gray-700">POST /sueldos/calcular/20</div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">ENUNCIADO</p>
+                    <p class="text-sm text-gray-700">Recibir los días trabajados por URL y por JSON el nombre y pago diario. Calcular y devolver el sueldo total.</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">JSON ENVIADO</p>
+                    <pre class="bg-gray-100 p-2 rounded text-xs font-mono text-gray-800">{ "nombre": "Camilo", "pagoDiario": 25000 }</pre>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">RESPUESTA ESPERADA</p>
+                    <pre class="bg-java-50 p-2 rounded text-xs font-mono text-gray-800">Camilo debe recibir 500000 por 20 días trabajados</pre>
+                </div>
+                <div class="flex flex-wrap gap-1 items-center justify-between">
+                    <div class="flex flex-wrap gap-1">
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">@PathVariable</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">@RequestBody</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">DTO</span>
+                    </div>
+                    <button onclick="togglePseudo(this)" class="px-3 py-1 bg-gray-600 text-white text-xs rounded font-medium hover:bg-gray-700 transition">Pseudocódigo</button>
+                </div>
+                <div class="pseudo-section hidden">
+                    <p class="text-xs font-semibold text-java-600 mb-2">PSEUDOCÓDIGO</p>
+                    <ol class="text-xs text-gray-700">
+                        <li>Recibir dias por @PathVariable.</li>
+                        <li>Recibir nombre y pagoDiario por @RequestBody → DTO.</li>
+                        <li>sueldo = dias * pagoDiario.</li>
+                        <li>Retornar mensaje.</li>
+                    </ol>
+                    <div class="logic-code">int sueldo = dias * dto.pagoDiario
+return dto.nombre + " debe recibir " + sueldo + " por " + dias + " días trabajados"</div>
+                </div>
+            </div>
+        </details>
+
+        <!-- EJ 11 -->
+        <details class="border border-gray-200 rounded-lg overflow-hidden" data-id="11">
+            <summary class="px-4 py-3 bg-gray-50 cursor-pointer hover:bg-gray-100 flex items-center gap-2 font-medium text-gray-800 select-none">
+                <span class="flex w-6 h-6 items-center justify-center rounded-full bg-java-600 text-white text-xs font-bold flex-shrink-0">11</span>
+                <span class="flex-1">Nota final con ponderación por URL</span>
+                <span class="check-icon text-java-600 hidden">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                </span>
+            </summary>
+            <div class="px-4 py-4 space-y-3 bg-white">
+                <div class="flex items-center justify-between">
+                    <span class="timer-mini timer-green" data-timer>03:00</span>
+                    <button onclick="markDone(this)" class="px-3 py-1 text-xs rounded font-medium border border-java-600 text-java-600 hover:bg-java-50 transition done-btn flex items-center gap-1">
+                        Marcar como hecho
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                    </button>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">MÉTODO & ENDPOINT</p>
+                    <p class="text-sm"><span class="badge-post inline-block px-2 py-0.5 text-white text-xs rounded font-bold mr-1">POST</span><code class="text-gray-600">/notas/ponderar/{porcentaje}</code></p>
+                </div>
+                <div class="bg-java-50 px-3 py-2 rounded text-xs font-mono text-gray-700">POST /notas/ponderar/40</div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">ENUNCIADO</p>
+                    <p class="text-sm text-gray-700">Recibir un porcentaje por URL y una nota por JSON. Calcular cuánto aporta esa nota al promedio final.</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">JSON ENVIADO</p>
+                    <pre class="bg-gray-100 p-2 rounded text-xs font-mono text-gray-800">{ "nombre": "Sofía", "nota": 6.0 }</pre>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">RESPUESTA ESPERADA</p>
+                    <pre class="bg-java-50 p-2 rounded text-xs font-mono text-gray-800">La nota de Sofía aporta 2.4 al promedio final</pre>
+                </div>
+                <div class="flex flex-wrap gap-1 items-center justify-between">
+                    <div class="flex flex-wrap gap-1">
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">@PathVariable</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">@RequestBody</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">double</span>
+                    </div>
+                    <button onclick="togglePseudo(this)" class="px-3 py-1 bg-gray-600 text-white text-xs rounded font-medium hover:bg-gray-700 transition">Pseudocódigo</button>
+                </div>
+                <div class="pseudo-section hidden">
+                    <p class="text-xs font-semibold text-java-600 mb-2">PSEUDOCÓDIGO</p>
+                    <ol class="text-xs text-gray-700">
+                        <li>Recibir porcentaje por @PathVariable.</li>
+                        <li>Recibir nombre y nota por @RequestBody → DTO.</li>
+                        <li>aporte = nota * (porcentaje / 100).</li>
+                        <li>Retornar mensaje.</li>
+                    </ol>
+                    <div class="logic-code">double aporte = dto.nota * (porcentaje / 100.0)
+return "La nota de " + dto.nombre + " aporta " + aporte + " al promedio final"</div>
+                </div>
+            </div>
+        </details>
+
+        <!-- EJ 12 -->
+        <details class="border border-gray-200 rounded-lg overflow-hidden" data-id="12">
+            <summary class="px-4 py-3 bg-gray-50 cursor-pointer hover:bg-gray-100 flex items-center gap-2 font-medium text-gray-800 select-none">
+                <span class="flex w-6 h-6 items-center justify-center rounded-full bg-java-600 text-white text-xs font-bold flex-shrink-0">12</span>
+                <span class="flex-1">Aumentar precio con porcentaje</span>
+                <span class="check-icon text-java-600 hidden">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                </span>
+            </summary>
+            <div class="px-4 py-4 space-y-3 bg-white">
+                <div class="flex items-center justify-between">
+                    <span class="timer-mini timer-green" data-timer>03:00</span>
+                    <button onclick="markDone(this)" class="px-3 py-1 text-xs rounded font-medium border border-java-600 text-java-600 hover:bg-java-50 transition done-btn flex items-center gap-1">
+                        Marcar como hecho
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                    </button>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">MÉTODO & ENDPOINT</p>
+                    <p class="text-sm"><span class="badge-put inline-block px-2 py-0.5 text-white text-xs rounded font-bold mr-1">PUT</span><code class="text-gray-600">/productos/aumentar/{porcentaje}</code></p>
+                </div>
+                <div class="bg-java-50 px-3 py-2 rounded text-xs font-mono text-gray-700">PUT /productos/aumentar/15</div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">ENUNCIADO</p>
+                    <p class="text-sm text-gray-700">Recibir el porcentaje de aumento por URL y por JSON el nombre del producto y su precio actual. Devolver el precio aumentado.</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">JSON ENVIADO</p>
+                    <pre class="bg-gray-100 p-2 rounded text-xs font-mono text-gray-800">{ "nombre": "Silla", "precio": 40000 }</pre>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">RESPUESTA ESPERADA</p>
+                    <pre class="bg-java-50 p-2 rounded text-xs font-mono text-gray-800">El nuevo precio de Silla es 46000.0</pre>
+                </div>
+                <div class="flex flex-wrap gap-1 items-center justify-between">
+                    <div class="flex flex-wrap gap-1">
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">@PathVariable</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">@RequestBody</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">PUT</span>
+                    </div>
+                    <button onclick="togglePseudo(this)" class="px-3 py-1 bg-gray-600 text-white text-xs rounded font-medium hover:bg-gray-700 transition">Pseudocódigo</button>
+                </div>
+                <div class="pseudo-section hidden">
+                    <p class="text-xs font-semibold text-java-600 mb-2">PSEUDOCÓDIGO</p>
+                    <ol class="text-xs text-gray-700">
+                        <li>Recibir porcentaje por @PathVariable.</li>
+                        <li>Recibir nombre y precio por @RequestBody → DTO.</li>
+                        <li>nuevoPrecio = precio * (1 + porcentaje/100).</li>
+                        <li>Retornar mensaje.</li>
+                    </ol>
+                    <div class="logic-code">double nuevoPrecio = dto.precio * (1 + porcentaje / 100.0)
+return "El nuevo precio de " + dto.nombre + " es " + nuevoPrecio</div>
+                </div>
+            </div>
+        </details>
+
+        <!-- EJ 13 -->
+        <details class="border border-gray-200 rounded-lg overflow-hidden" data-id="13">
+            <summary class="px-4 py-3 bg-gray-50 cursor-pointer hover:bg-gray-100 flex items-center gap-2 font-medium text-gray-800 select-none">
+                <span class="flex w-6 h-6 items-center justify-center rounded-full bg-java-600 text-white text-xs font-bold flex-shrink-0">13</span>
+                <span class="flex-1">Actualizar stock con condición</span>
+                <span class="check-icon text-java-600 hidden">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                </span>
+            </summary>
+            <div class="px-4 py-4 space-y-3 bg-white">
+                <div class="flex items-center justify-between">
+                    <span class="timer-mini timer-green" data-timer>03:00</span>
+                    <button onclick="markDone(this)" class="px-3 py-1 text-xs rounded font-medium border border-java-600 text-java-600 hover:bg-java-50 transition done-btn flex items-center gap-1">
+                        Marcar como hecho
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                    </button>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">MÉTODO & ENDPOINT</p>
+                    <p class="text-sm"><span class="badge-put inline-block px-2 py-0.5 text-white text-xs rounded font-bold mr-1">PUT</span><code class="text-gray-600">/productos/stock/{cantidadNueva}</code></p>
+                </div>
+                <div class="bg-java-50 px-3 py-2 rounded text-xs font-mono text-gray-700">PUT /productos/stock/0</div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">ENUNCIADO</p>
+                    <p class="text-sm text-gray-700">Recibir la nueva cantidad de stock por URL y por JSON el nombre del producto. Si la cantidad es > 0, tiene stock disponible; si es 0, está sin stock.</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">JSON ENVIADO</p>
+                    <pre class="bg-gray-100 p-2 rounded text-xs font-mono text-gray-800">{ "nombre": "Monitor" }</pre>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">RESPUESTA ESPERADA</p>
+                    <pre class="bg-java-50 p-2 rounded text-xs font-mono text-gray-800">Monitor está sin stock</pre>
+                </div>
+                <div class="flex flex-wrap gap-1 items-center justify-between">
+                    <div class="flex flex-wrap gap-1">
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">@PathVariable</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">@RequestBody</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">if/else</span>
+                    </div>
+                    <button onclick="togglePseudo(this)" class="px-3 py-1 bg-gray-600 text-white text-xs rounded font-medium hover:bg-gray-700 transition">Pseudocódigo</button>
+                </div>
+                <div class="pseudo-section hidden">
+                    <p class="text-xs font-semibold text-java-600 mb-2">PSEUDOCÓDIGO</p>
+                    <ol class="text-xs text-gray-700">
+                        <li>Recibir cantidadNueva por @PathVariable.</li>
+                        <li>Recibir nombre por @RequestBody → DTO.</li>
+                        <li>Si cantidadNueva > 0 → "tiene stock disponible"; si no → "está sin stock".</li>
+                    </ol>
+                    <div class="logic-code">if (cantidadNueva > 0)
+    return dto.nombre + " tiene stock disponible (" + cantidadNueva + " unidades)"
+else
+    return dto.nombre + " está sin stock"</div>
+                </div>
+            </div>
+        </details>
+
+        <!-- EJ 14 -->
+        <details class="border border-gray-200 rounded-lg overflow-hidden" data-id="14">
+            <summary class="px-4 py-3 bg-gray-50 cursor-pointer hover:bg-gray-100 flex items-center gap-2 font-medium text-gray-800 select-none">
+                <span class="flex w-6 h-6 items-center justify-center rounded-full bg-java-600 text-white text-xs font-bold flex-shrink-0">14</span>
+                <span class="flex-1">Actualizar edad y clasificar</span>
+                <span class="check-icon text-java-600 hidden">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                </span>
+            </summary>
+            <div class="px-4 py-4 space-y-3 bg-white">
+                <div class="flex items-center justify-between">
+                    <span class="timer-mini timer-green" data-timer>03:00</span>
+                    <button onclick="markDone(this)" class="px-3 py-1 text-xs rounded font-medium border border-java-600 text-java-600 hover:bg-java-50 transition done-btn flex items-center gap-1">
+                        Marcar como hecho
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                    </button>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">MÉTODO & ENDPOINT</p>
+                    <p class="text-sm"><span class="badge-put inline-block px-2 py-0.5 text-white text-xs rounded font-bold mr-1">PUT</span><code class="text-gray-600">/personas/edad/{nuevaEdad}</code></p>
+                </div>
+                <div class="bg-java-50 px-3 py-2 rounded text-xs font-mono text-gray-700">PUT /personas/edad/21</div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">ENUNCIADO</p>
+                    <p class="text-sm text-gray-700">Recibir la nueva edad por URL y el nombre por JSON. Si edad ≥ 18 → adulto; si no → menor de edad.</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">JSON ENVIADO</p>
+                    <pre class="bg-gray-100 p-2 rounded text-xs font-mono text-gray-800">{ "nombre": "Valentina" }</pre>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">RESPUESTA ESPERADA</p>
+                    <pre class="bg-java-50 p-2 rounded text-xs font-mono text-gray-800">Valentina ahora tiene 21 años y es adulto</pre>
+                </div>
+                <div class="flex flex-wrap gap-1 items-center justify-between">
+                    <div class="flex flex-wrap gap-1">
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">@PathVariable</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">@RequestBody</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">if/else</span>
+                    </div>
+                    <button onclick="togglePseudo(this)" class="px-3 py-1 bg-gray-600 text-white text-xs rounded font-medium hover:bg-gray-700 transition">Pseudocódigo</button>
+                </div>
+                <div class="pseudo-section hidden">
+                    <p class="text-xs font-semibold text-java-600 mb-2">PSEUDOCÓDIGO</p>
+                    <ol class="text-xs text-gray-700">
+                        <li>Recibir nuevaEdad por @PathVariable.</li>
+                        <li>Recibir nombre por @RequestBody → DTO.</li>
+                        <li>clasificar = (nuevaEdad >= 18) ? "adulto" : "menor de edad".</li>
+                        <li>Retornar mensaje.</li>
+                    </ol>
+                    <div class="logic-code">String clasificacion = (nuevaEdad >= 18) ? "adulto" : "menor de edad"
+return dto.nombre + " ahora tiene " + nuevaEdad + " años y es " + clasificacion</div>
+                </div>
+            </div>
+        </details>
+
+        <!-- EJ 15 -->
+        <details class="border border-gray-200 rounded-lg overflow-hidden" data-id="15">
+            <summary class="px-4 py-3 bg-gray-50 cursor-pointer hover:bg-gray-100 flex items-center gap-2 font-medium text-gray-800 select-none">
+                <span class="flex w-6 h-6 items-center justify-center rounded-full bg-java-600 text-white text-xs font-bold flex-shrink-0">15</span>
+                <span class="flex-1">Tabla de multiplicar con for</span>
+                <span class="check-icon text-java-600 hidden">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                </span>
+            </summary>
+            <div class="px-4 py-4 space-y-3 bg-white">
+                <div class="flex items-center justify-between">
+                    <span class="timer-mini timer-green" data-timer>03:00</span>
+                    <button onclick="markDone(this)" class="px-3 py-1 text-xs rounded font-medium border border-java-600 text-java-600 hover:bg-java-50 transition done-btn flex items-center gap-1">
+                        Marcar como hecho
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                    </button>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">MÉTODO & ENDPOINT</p>
+                    <p class="text-sm"><span class="badge-get inline-block px-2 py-0.5 text-white text-xs rounded font-bold mr-1">GET</span><code class="text-gray-600">/tablas/{numero}</code></p>
+                </div>
+                <div class="bg-java-50 px-3 py-2 rounded text-xs font-mono text-gray-700">GET /tablas/5</div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">ENUNCIADO</p>
+                    <p class="text-sm text-gray-700">Recibir un número por URL y devolver su tabla de multiplicar del 1 al 10 usando un ciclo <code>for</code>.</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">RESPUESTA ESPERADA</p>
+                    <pre class="bg-java-50 p-2 rounded text-xs font-mono text-gray-800 max-h-32 overflow-y-auto">5 x 1 = 5
+5 x 2 = 10
+5 x 3 = 15
+5 x 4 = 20
+5 x 5 = 25
+5 x 6 = 30
+5 x 7 = 35
+5 x 8 = 40
+5 x 9 = 45
+5 x 10 = 50</pre>
+                </div>
+                <div class="flex flex-wrap gap-1 items-center justify-between">
+                    <div class="flex flex-wrap gap-1">
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">@PathVariable</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">GET</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">for</span>
+                    </div>
+                    <button onclick="togglePseudo(this)" class="px-3 py-1 bg-gray-600 text-white text-xs rounded font-medium hover:bg-gray-700 transition">Pseudocódigo</button>
+                </div>
+                <div class="pseudo-section hidden">
+                    <p class="text-xs font-semibold text-java-600 mb-2">PSEUDOCÓDIGO</p>
+                    <ol class="text-xs text-gray-700">
+                        <li>Recibir numero por @PathVariable.</li>
+                        <li>Crear StringBuilder resultado.</li>
+                        <li>for i = 1 to 10 → agregar "numero x i = numero*i\n".</li>
+                        <li>Retornar resultado como String.</li>
+                    </ol>
+                    <div class="logic-code">StringBuilder sb = new StringBuilder()
+for (int i = 1; i &lt;= 10; i++) {
+    sb.append(numero + " x " + i + " = " + (numero * i) + "\n")
+}
+return sb.toString()</div>
+                </div>
+            </div>
+        </details>
+
+        <!-- EJ 16 -->
+        <details class="border border-gray-200 rounded-lg overflow-hidden" data-id="16">
+            <summary class="px-4 py-3 bg-gray-50 cursor-pointer hover:bg-gray-100 flex items-center gap-2 font-medium text-gray-800 select-none">
+                <span class="flex w-6 h-6 items-center justify-center rounded-full bg-java-600 text-white text-xs font-bold flex-shrink-0">16</span>
+                <span class="flex-1">Sumar números del 1 al N</span>
+                <span class="check-icon text-java-600 hidden">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                </span>
+            </summary>
+            <div class="px-4 py-4 space-y-3 bg-white">
+                <div class="flex items-center justify-between">
+                    <span class="timer-mini timer-green" data-timer>03:00</span>
+                    <button onclick="markDone(this)" class="px-3 py-1 text-xs rounded font-medium border border-java-600 text-java-600 hover:bg-java-50 transition done-btn flex items-center gap-1">
+                        Marcar como hecho
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                    </button>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">MÉTODO & ENDPOINT</p>
+                    <p class="text-sm"><span class="badge-get inline-block px-2 py-0.5 text-white text-xs rounded font-bold mr-1">GET</span><code class="text-gray-600">/numeros/sumar/{numero}</code></p>
+                </div>
+                <div class="bg-java-50 px-3 py-2 rounded text-xs font-mono text-gray-700">GET /numeros/sumar/5</div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">ENUNCIADO</p>
+                    <p class="text-sm text-gray-700">Recibir un número por URL. Usar un ciclo <code>for</code> para sumar todos los números del 1 al N. Devolver el resultado.</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">RESPUESTA ESPERADA</p>
+                    <pre class="bg-java-50 p-2 rounded text-xs font-mono text-gray-800">15</pre>
+                </div>
+                <div class="flex flex-wrap gap-1 items-center justify-between">
+                    <div class="flex flex-wrap gap-1">
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">@PathVariable</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">GET</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">for</span>
+                    </div>
+                    <button onclick="togglePseudo(this)" class="px-3 py-1 bg-gray-600 text-white text-xs rounded font-medium hover:bg-gray-700 transition">Pseudocódigo</button>
+                </div>
+                <div class="pseudo-section hidden">
+                    <p class="text-xs font-semibold text-java-600 mb-2">PSEUDOCÓDIGO</p>
+                    <ol class="text-xs text-gray-700">
+                        <li>Recibir numero por @PathVariable.</li>
+                        <li>Inicializar suma = 0.</li>
+                        <li>for i = 1 to numero → suma += i.</li>
+                        <li>Retornar suma.</li>
+                    </ol>
+                    <div class="logic-code">int suma = 0
+for (int i = 1; i &lt;= numero; i++) {
+    suma += i
+}
+return suma</div>
+                </div>
+            </div>
+        </details>
+
+        <!-- EJ 17 -->
+        <details class="border border-gray-200 rounded-lg overflow-hidden" data-id="17">
+            <summary class="px-4 py-3 bg-gray-50 cursor-pointer hover:bg-gray-100 flex items-center gap-2 font-medium text-gray-800 select-none">
+                <span class="flex w-6 h-6 items-center justify-center rounded-full bg-java-600 text-white text-xs font-bold flex-shrink-0">17</span>
+                <span class="flex-1">Contar pares hasta un número</span>
+                <span class="check-icon text-java-600 hidden">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                </span>
+            </summary>
+            <div class="px-4 py-4 space-y-3 bg-white">
+                <div class="flex items-center justify-between">
+                    <span class="timer-mini timer-green" data-timer>03:00</span>
+                    <button onclick="markDone(this)" class="px-3 py-1 text-xs rounded font-medium border border-java-600 text-java-600 hover:bg-java-50 transition done-btn flex items-center gap-1">
+                        Marcar como hecho
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                    </button>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">MÉTODO & ENDPOINT</p>
+                    <p class="text-sm"><span class="badge-get inline-block px-2 py-0.5 text-white text-xs rounded font-bold mr-1">GET</span><code class="text-gray-600">/numeros/pares/{numero}</code></p>
+                </div>
+                <div class="bg-java-50 px-3 py-2 rounded text-xs font-mono text-gray-700">GET /numeros/pares/10</div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">ENUNCIADO</p>
+                    <p class="text-sm text-gray-700">Recibir un número por URL. Contar cuántos números pares hay entre 1 y ese número.</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">RESPUESTA ESPERADA</p>
+                    <pre class="bg-java-50 p-2 rounded text-xs font-mono text-gray-800">Hay 5 números pares entre 1 y 10</pre>
+                </div>
+                <div class="flex flex-wrap gap-1 items-center justify-between">
+                    <div class="flex flex-wrap gap-1">
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">@PathVariable</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">GET</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">for</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">if</span>
+                    </div>
+                    <button onclick="togglePseudo(this)" class="px-3 py-1 bg-gray-600 text-white text-xs rounded font-medium hover:bg-gray-700 transition">Pseudocódigo</button>
+                </div>
+                <div class="pseudo-section hidden">
+                    <p class="text-xs font-semibold text-java-600 mb-2">PSEUDOCÓDIGO</p>
+                    <ol class="text-xs text-gray-700">
+                        <li>Recibir numero por @PathVariable.</li>
+                        <li>Inicializar contador = 0.</li>
+                        <li>for i = 1 to numero → si i % 2 == 0, contador++.</li>
+                        <li>Retornar "Hay " + contador + " números pares entre 1 y " + numero.</li>
+                    </ol>
+                    <div class="logic-code">int contador = 0
+for (int i = 1; i &lt;= numero; i++) {
+    if (i % 2 == 0) contador++
+}
+return "Hay " + contador + " números pares entre 1 y " + numero</div>
+                </div>
+            </div>
+        </details>
+
+        <!-- EJ 18 -->
+        <details class="border border-gray-200 rounded-lg overflow-hidden" data-id="18">
+            <summary class="px-4 py-3 bg-gray-50 cursor-pointer hover:bg-gray-100 flex items-center gap-2 font-medium text-gray-800 select-none">
+                <span class="flex w-6 h-6 items-center justify-center rounded-full bg-java-600 text-white text-xs font-bold flex-shrink-0">18</span>
+                <span class="flex-1">Clasificar número</span>
+                <span class="check-icon text-java-600 hidden">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                </span>
+            </summary>
+            <div class="px-4 py-4 space-y-3 bg-white">
+                <div class="flex items-center justify-between">
+                    <span class="timer-mini timer-green" data-timer>03:00</span>
+                    <button onclick="markDone(this)" class="px-3 py-1 text-xs rounded font-medium border border-java-600 text-java-600 hover:bg-java-50 transition done-btn flex items-center gap-1">
+                        Marcar como hecho
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                    </button>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">MÉTODO & ENDPOINT</p>
+                    <p class="text-sm"><span class="badge-get inline-block px-2 py-0.5 text-white text-xs rounded font-bold mr-1">GET</span><code class="text-gray-600">/numeros/clasificar/{numero}</code></p>
+                </div>
+                <div class="bg-java-50 px-3 py-2 rounded text-xs font-mono text-gray-700">GET /numeros/clasificar/-4</div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">ENUNCIADO</p>
+                    <p class="text-sm text-gray-700">Recibir un número por URL. Si es > 0 → "positivo"; si es &lt; 0 → "negativo"; si es 0 → "cero".</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">RESPUESTA ESPERADA</p>
+                    <pre class="bg-java-50 p-2 rounded text-xs font-mono text-gray-800">negativo</pre>
+                </div>
+                <div class="flex flex-wrap gap-1 items-center justify-between">
+                    <div class="flex flex-wrap gap-1">
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">@PathVariable</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">GET</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">if/else</span>
+                    </div>
+                    <button onclick="togglePseudo(this)" class="px-3 py-1 bg-gray-600 text-white text-xs rounded font-medium hover:bg-gray-700 transition">Pseudocódigo</button>
+                </div>
+                <div class="pseudo-section hidden">
+                    <p class="text-xs font-semibold text-java-600 mb-2">PSEUDOCÓDIGO</p>
+                    <ol class="text-xs text-gray-700">
+                        <li>Recibir numero por @PathVariable.</li>
+                        <li>Si numero > 0 → "positivo".</li>
+                        <li>Si numero &lt; 0 → "negativo".</li>
+                        <li>Si numero == 0 → "cero".</li>
+                    </ol>
+                    <div class="logic-code">if (numero > 0) return "positivo"
+else if (numero &lt; 0) return "negativo"
+else return "cero"</div>
+                </div>
+            </div>
+        </details>
+
+        <!-- EJ 19 -->
+        <details class="border border-gray-200 rounded-lg overflow-hidden" data-id="19">
+            <summary class="px-4 py-3 bg-gray-50 cursor-pointer hover:bg-gray-100 flex items-center gap-2 font-medium text-gray-800 select-none">
+                <span class="flex w-6 h-6 items-center justify-center rounded-full bg-java-600 text-white text-xs font-bold flex-shrink-0">19</span>
+                <span class="flex-1">Eliminar usuario con validación</span>
+                <span class="check-icon text-java-600 hidden">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                </span>
+            </summary>
+            <div class="px-4 py-4 space-y-3 bg-white">
+                <div class="flex items-center justify-between">
+                    <span class="timer-mini timer-green" data-timer>03:00</span>
+                    <button onclick="markDone(this)" class="px-3 py-1 text-xs rounded font-medium border border-java-600 text-java-600 hover:bg-java-50 transition done-btn flex items-center gap-1">
+                        Marcar como hecho
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                    </button>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">MÉTODO & ENDPOINT</p>
+                    <p class="text-sm"><span class="badge-delete inline-block px-2 py-0.5 text-white text-xs rounded font-bold mr-1">DELETE</span><code class="text-gray-600">/usuarios/{id}</code></p>
+                </div>
+                <div class="bg-java-50 px-3 py-2 rounded text-xs font-mono text-gray-700">DELETE /usuarios/8</div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">ENUNCIADO</p>
+                    <p class="text-sm text-gray-700">Recibir el ID de un usuario por URL. Si ID > 0 → eliminado correctamente; si ID ≤ 0 → ID inválido.</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">RESPUESTA ESPERADA</p>
+                    <pre class="bg-java-50 p-2 rounded text-xs font-mono text-gray-800">Usuario con ID 8 eliminado correctamente</pre>
+                </div>
+                <div class="flex flex-wrap gap-1 items-center justify-between">
+                    <div class="flex flex-wrap gap-1">
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">@PathVariable</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">DELETE</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">if</span>
+                    </div>
+                    <button onclick="togglePseudo(this)" class="px-3 py-1 bg-gray-600 text-white text-xs rounded font-medium hover:bg-gray-700 transition">Pseudocódigo</button>
+                </div>
+                <div class="pseudo-section hidden">
+                    <p class="text-xs font-semibold text-java-600 mb-2">PSEUDOCÓDIGO</p>
+                    <ol class="text-xs text-gray-700">
+                        <li>Recibir id por @PathVariable.</li>
+                        <li>Si id > 0 → "Usuario con ID {id} eliminado correctamente".</li>
+                        <li>Si no → "ID inválido".</li>
+                    </ol>
+                    <div class="logic-code">if (id > 0)
+    return "Usuario con ID " + id + " eliminado correctamente"
+else
+    return "ID inválido"</div>
+                </div>
+            </div>
+        </details>
+
+        <!-- EJ 20 -->
+        <details class="border border-gray-200 rounded-lg overflow-hidden" data-id="20">
+            <summary class="px-4 py-3 bg-gray-50 cursor-pointer hover:bg-gray-100 flex items-center gap-2 font-medium text-gray-800 select-none">
+                <span class="flex w-6 h-6 items-center justify-center rounded-full bg-java-600 text-white text-xs font-bold flex-shrink-0">20</span>
+                <span class="flex-1">Eliminar producto por categoría</span>
+                <span class="check-icon text-java-600 hidden">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                </span>
+            </summary>
+            <div class="px-4 py-4 space-y-3 bg-white">
+                <div class="flex items-center justify-between">
+                    <span class="timer-mini timer-green" data-timer>03:00</span>
+                    <button onclick="markDone(this)" class="px-3 py-1 text-xs rounded font-medium border border-java-600 text-java-600 hover:bg-java-50 transition done-btn flex items-center gap-1">
+                        Marcar como hecho
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                    </button>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">MÉTODO & ENDPOINT</p>
+                    <p class="text-sm"><span class="badge-delete inline-block px-2 py-0.5 text-white text-xs rounded font-bold mr-1">DELETE</span><code class="text-gray-600">/categorias/{categoria}/productos/{id}</code></p>
+                </div>
+                <div class="bg-java-50 px-3 py-2 rounded text-xs font-mono text-gray-700">DELETE /categorias/tecnologia/productos/12</div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">ENUNCIADO</p>
+                    <p class="text-sm text-gray-700">Recibir categoría e ID de producto por URL. Si categoría es <code>tecnologia</code> → eliminado correctamente; si no → no se puede eliminar desde esa categoría.</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-java-600 mb-1">RESPUESTA ESPERADA</p>
+                    <pre class="bg-java-50 p-2 rounded text-xs font-mono text-gray-800">Producto con ID 12 eliminado de la categoría tecnologia</pre>
+                </div>
+                <div class="flex flex-wrap gap-1 items-center justify-between">
+                    <div class="flex flex-wrap gap-1">
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">@PathVariable</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">DELETE</span>
+                        <span class="px-2 py-0.5 bg-java-100 text-java-700 text-xs rounded font-medium">if/else</span>
+                    </div>
+                    <button onclick="togglePseudo(this)" class="px-3 py-1 bg-gray-600 text-white text-xs rounded font-medium hover:bg-gray-700 transition">Pseudocódigo</button>
+                </div>
+                <div class="pseudo-section hidden">
+                    <p class="text-xs font-semibold text-java-600 mb-2">PSEUDOCÓDIGO</p>
+                    <ol class="text-xs text-gray-700">
+                        <li>Recibir categoria e id por @PathVariable.</li>
+                        <li>Si categoria.equals("tecnologia") → mensaje de éxito.</li>
+                        <li>Si no → "No se puede eliminar desde esa categoría".</li>
+                    </ol>
+                    <div class="logic-code">if (categoria.equals("tecnologia"))
+    return "Producto con ID " + id + " eliminado de la categoría " + categoria
+else
+    return "No se puede eliminar desde la categoría " + categoria</div>
+                </div>
+            </div>
+        </details>
+
+    </div><!-- /exercise-list -->
+
+    <!-- Reset progreso -->
+    <div class="text-center mt-8">
+        <button onclick="resetProgress()" class="text-xs text-gray-400 hover:text-gray-600 transition underline">Reiniciar progreso</button>
+    </div>
+
+</div><!-- /container -->
+
+<script>
+// ─────────────────────────────────────────────
+//  TIMER
+// ─────────────────────────────────────────────
+let totalSecs = 0, remaining = 0, ticker = null, paused = false;
+const PRESET_KEY = 'sb_timer_preset';
+
+function getPreset() {
+    return parseInt(document.getElementById('timer-minutes').value, 10) || 3;
+}
+
+function fmtTime(s) {
+    const m = Math.floor(s / 60), sec = s % 60;
+    return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+}
+
+function syncDisplays() {
+    const txt = remaining > 0 ? fmtTime(remaining) : '¡Tiempo!';
+    const red  = remaining <= 10 && (totalSecs > 0);
+    document.getElementById('timer-global').textContent = txt;
+    document.getElementById('timer-global').className = 'timer-display ' + (red ? 'timer-red' : 'timer-green');
+    document.querySelectorAll('[data-timer]').forEach(el => {
+        el.textContent = txt;
+        el.className = 'timer-mini ' + (red ? 'timer-red' : 'timer-green');
+    });
+}
+
+function syncButtons() {
+    const s = document.getElementById('btn-start');
+    const p = document.getElementById('btn-pause');
+    const r = document.getElementById('btn-resume');
+    const st = document.getElementById('timer-status');
+    if (remaining <= 0 && totalSecs > 0) {
+        s.innerHTML = '<svg class="w-4 h-4 inline-block" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Reiniciar'; s.classList.remove('hidden');
+        p.classList.add('hidden'); r.classList.add('hidden');
+        st.textContent = '';
+    } else if (paused) {
+        s.classList.add('hidden'); p.classList.add('hidden'); r.classList.remove('hidden');
+        st.textContent = 'En pausa';
+    } else if (remaining > 0) {
+        s.classList.add('hidden'); p.classList.remove('hidden'); r.classList.add('hidden');
+        st.textContent = '';
+    } else {
+        s.innerHTML = '<svg class="w-4 h-4 inline-block" fill="currentColor" viewBox="0 0 20 20"><path d="M6.3 2.841A1.5 1.5 0 004 4.11v11.78a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/></svg> Iniciar'; s.classList.remove('hidden');
+        p.classList.add('hidden'); r.classList.add('hidden');
+        st.textContent = '';
+    }
+}
+
+function startTimer() {
+    if (ticker) { clearInterval(ticker); ticker = null; }
+    totalSecs = getPreset() * 60;
+    remaining = totalSecs;
+    paused = false;
+    syncDisplays(); syncButtons();
+    ticker = setInterval(() => {
+        if (paused) return;
+        remaining--;
+        syncDisplays();
+        if (remaining <= 0) { clearInterval(ticker); ticker = null; syncButtons(); }
+    }, 1000);
+    syncButtons();
+}
+
+function pauseTimer()  { paused = true;  syncButtons(); }
+function resumeTimer() { paused = false; syncButtons(); }
+
+function updateTimerPreset() {
+    const m = getPreset();
+    localStorage.setItem(PRESET_KEY, m);
+    if (!ticker && totalSecs === 0) {
+        const txt = fmtTime(m * 60);
+        document.getElementById('timer-global').textContent = txt;
+        document.querySelectorAll('[data-timer]').forEach(el => el.textContent = txt);
+    }
+}
+
+// ─────────────────────────────────────────────
+//  ACORDEÓN – solo uno abierto a la vez
+// ─────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    // Restaurar preset guardado
+    const saved = localStorage.getItem(PRESET_KEY);
+    if (saved) {
+        document.getElementById('timer-minutes').value = saved;
+        const txt = fmtTime(parseInt(saved,10) * 60);
+        document.getElementById('timer-global').textContent = txt;
+        document.querySelectorAll('[data-timer]').forEach(el => el.textContent = txt);
+    }
+
+    // Accordion
+    document.querySelectorAll('#exercise-list details').forEach(d => {
+        d.addEventListener('toggle', function() {
+            if (this.open) {
+                document.querySelectorAll('#exercise-list details').forEach(other => {
+                    if (other !== this) other.open = false;
+                });
+            }
+        });
+    });
+
+    // Restaurar ejercicios marcados
+    const done = JSON.parse(localStorage.getItem('sb_done') || '[]');
+    done.forEach(id => applyDone(id));
+    updateProgress();
+});
+
+// ─────────────────────────────────────────────
+//  PSEUDOCÓDIGO toggle
+// ─────────────────────────────────────────────
+function togglePseudo(btn) {
+    const section = btn.closest('.space-y-3').querySelector('.pseudo-section');
+    if (!section) return;
+    const hidden = section.classList.toggle('hidden');
+    btn.textContent = hidden ? 'Pseudocódigo' : 'Ocultar';
+}
+
+// ─────────────────────────────────────────────
+//  PROGRESO
+// ─────────────────────────────────────────────
+function applyDone(id) {
+    const detail = document.querySelector(`details[data-id="${id}"]`);
+    if (!detail) return;
+    detail.querySelector('.check-icon').classList.remove('hidden');
+    detail.querySelector('.done-btn').innerHTML = 'Hecho <svg class="w-3.5 h-3.5 inline-block" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>';
+    detail.querySelector('.done-btn').disabled = true;
+    detail.querySelector('.done-btn').classList.add('opacity-50', 'cursor-not-allowed');
+    // Marcar número verde oscuro
+    const badge = detail.querySelector('summary span:first-child');
+    badge.classList.remove('bg-java-600');
+    badge.classList.add('bg-java-700');
+}
+
+function markDone(btn) {
+    const detail = btn.closest('details');
+    const id = detail.dataset.id;
+    const done = JSON.parse(localStorage.getItem('sb_done') || '[]');
+    if (!done.includes(id)) {
+        done.push(id);
+        localStorage.setItem('sb_done', JSON.stringify(done));
+    }
+    applyDone(id);
+    updateProgress();
+}
+
+function updateProgress() {
+    const done = JSON.parse(localStorage.getItem('sb_done') || '[]');
+    const count = done.length;
+    document.getElementById('progress-label').textContent = `${count} / 20 completados`;
+    document.getElementById('progress-bar').style.width = `${(count / 20) * 100}%`;
+}
+
+function resetProgress() {
+    if (!confirm('¿Reiniciar todo el progreso?')) return;
+    localStorage.removeItem('sb_done');
+    document.querySelectorAll('#exercise-list details').forEach(d => {
+        d.querySelector('.check-icon').classList.add('hidden');
+        const btn = d.querySelector('.done-btn');
+        btn.innerHTML = 'Marcar como hecho <svg class="w-3.5 h-3.5 inline-block" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>';
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        const badge = d.querySelector('summary span:first-child');
+        badge.classList.add('bg-java-600');
+        badge.classList.remove('bg-java-700');
+    });
+    updateProgress();
+}
+</script>
 </body>
 </html>
